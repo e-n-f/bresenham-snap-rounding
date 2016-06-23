@@ -52,30 +52,34 @@ struct seg {
             if (e2 > -dx) {
                 err -= dy;
                 x0 += sx;
+
+                out();
             }
 
             if (e2 < dy) {
                 err += dx;
                 y0 += sy;
-            }
 
-            out();
+                out();
+            }
         }
     }
 };
 
 int main() {
-    srand(time(0));
+    srand(0);
 
-    int x0 = rand() % 100;
-    int y0 = rand() % 100;
-    int x1 = rand() % 100;
-    int y1 = rand() % 100;
+    for (size_t i = 0; i < 50; i++) {
+        int x0 = rand() % 100;
+        int y0 = rand() % 100;
+        int x1 = rand() % 100;
+        int y1 = rand() % 100;
 
-    seg s(x0, y0, x1, y1);
+        seg s(x0, y0, x1, y1);
 
-    printf("0 setlinewidth\n");
-    printf("%f %f moveto %f %f lineto stroke\n", x0 + .5, y0 + .5, x1 + .5, y1 + .5);
+        printf("0 setlinewidth\n");
+        printf("%f %f moveto %f %f lineto stroke\n", x0 + .5, y0 + .5, x1 + .5, y1 + .5);
 
-    s.run();
+        s.run();
+    }
 }
