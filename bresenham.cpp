@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <vector>
+#include <set>
 
 struct seg {
     int x0;
     int y0;
     int x1;
     int y1;
+    int xx, yy;
 
     int dx;
     int dy;
@@ -32,6 +35,13 @@ struct seg {
             reversed = true;
         }
 
+        restart();
+    }
+
+    void restart() {
+        xx = x0;
+        yy = y0;
+
         dx = abs(x1 - x0);
         sx = (x0 < x1) ? 1 : -1;
 
@@ -41,13 +51,14 @@ struct seg {
         err = ((dx > dy) ? dx : -dy) / 2;
     }
 
-    void out(const char *op) {
-        printf("%d %d %s ", x0, y0, op);
+    void out(const char *op, std::vector<std::set<int> > pixels, int id) {
+        printf("%d %d %s ", xx, yy, op);
+        pixels[yy * 100 + xx].insert(id);
     }
 
-    void run() {
-        out("moveto");
-        while (x0 != x1 || y0 != y1) {
+    void run(std::vector<std::set<int> > pixels, int id, bool check) {
+        out("moveto", pixels, id);
+        while (xx != x1 || yy != y1) {
             int e2 = err;
             bool across = false, down = false;
 
@@ -63,22 +74,22 @@ struct seg {
 
             if (across && down) {
                 if (dx > dy) {
-                    y0 += sy;
-                    out("lineto");
-                    x0 += sx;
-                    out("lineto");
+                    yy += sy;
+                    out("lineto", pixels, id);
+                    xx += sx;
+                    out("lineto", pixels, id);
                 } else {
-                    x0 += sx;
-                    out("lineto");
-                    y0 += sy;
-                    out("lineto");
+                    xx += sx;
+                    out("lineto", pixels, id);
+                    yy += sy;
+                    out("lineto", pixels, id);
                 }
             } else if (across) {
-                x0 += sx;
-                out("lineto");
+                xx += sx;
+                out("lineto", pixels, id);
             } else if (down) {
-                y0 += sy;
-                out("lineto");
+                yy += sy;
+                out("lineto", pixels, id);
             }
         }
         printf("stroke\n");
@@ -87,6 +98,11 @@ struct seg {
 
 int main() {
     srand(1);
+    std::vector<seg> segs;
+    std::vector<std::set<int> > pixels;
+    pixels.resize(100 * 100);
+
+    printf("0 setlinewidth\n");
 
     for (size_t i = 0; i < 50; i++) {
         int x0 = rand() % 100;
@@ -94,11 +110,13 @@ int main() {
         int x1 = rand() % 100;
         int y1 = rand() % 100;
 
-        seg s(x0, y0, x1, y1);
+        segs.push_back(seg(x0, y0, x1, y1));
+        printf("%d %d moveto %d %d lineto stroke\n", segs[i].x0, segs[i].y0, segs[i].x1, segs[i].y1);
+        segs[i].run(pixels, i, false);
+    }
 
-        printf("0 setlinewidth\n");
-        printf("%d %d moveto %d %d lineto stroke\n", x0, y0, x1, y1);
-
-        s.run();
+    for (size_t i = 0; i < 50; i++) {
+        segs[i].restart();
+        segs[i].run(pixels, i, true);
     }
 }
