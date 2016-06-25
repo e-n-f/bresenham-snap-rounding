@@ -41,33 +41,52 @@ struct seg {
         err = ((dx > dy) ? dx : -dy) / 2;
     }
 
-    void out() {
-        printf("%d %d moveto 1 0 rlineto 0 1 rlineto -1 0 rlineto 0 -1 rlineto stroke\n", x0, y0);
+    void out(const char *op) {
+        printf("%d %d %s ", x0, y0, op);
     }
 
     void run() {
-        out();
+        out("moveto");
         while (x0 != x1 || y0 != y1) {
             int e2 = err;
+            bool across = false, down = false;
+
             if (e2 > -dx) {
                 err -= dy;
-                x0 += sx;
-
-                out();
+                across = true;
             }
 
             if (e2 < dy) {
                 err += dx;
-                y0 += sy;
+                down = true;
+            }
 
-                out();
+            if (across && down) {
+                if (dx > dy) {
+                    y0 += sy;
+                    out("lineto");
+                    x0 += sx;
+                    out("lineto");
+                } else {
+                    x0 += sx;
+                    out("lineto");
+                    y0 += sy;
+                    out("lineto");
+                }
+            } else if (across) {
+                x0 += sx;
+                out("lineto");
+            } else if (down) {
+                y0 += sy;
+                out("lineto");
             }
         }
+        printf("stroke\n");
     }
 };
 
 int main() {
-    srand(0);
+    srand(1);
 
     for (size_t i = 0; i < 50; i++) {
         int x0 = rand() % 100;
@@ -78,7 +97,7 @@ int main() {
         seg s(x0, y0, x1, y1);
 
         printf("0 setlinewidth\n");
-        printf("%f %f moveto %f %f lineto stroke\n", x0 + .5, y0 + .5, x1 + .5, y1 + .5);
+        printf("%d %d moveto %d %d lineto stroke\n", x0, y0, x1, y1);
 
         s.run();
     }
