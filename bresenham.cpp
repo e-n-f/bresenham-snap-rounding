@@ -64,11 +64,15 @@ struct seg {
         int oi = oy * 100 + ox;
         int ni = yy * 100 + xx;
 
-        if (pixels[oi].size() > 1) {
-            printf("%d %d lineto ", ox, oy);
-        }
-        if (pixels[ni].size() > 1) {
-            printf("%d %d lineto ", xx, yy);
+        if (pixels[oi] != pixels[ni]) {
+            // Leaving a shared segment or changing how shared
+            if (pixels[oi].size() > 1) {
+                printf("%d %d lineto ", ox, oy);
+            }
+            // Entering a shared segment or changing how shared
+            if (pixels[ni].size() > 1) {
+                printf("%d %d lineto ", xx, yy);
+            }
         }
 
         ox = xx;
