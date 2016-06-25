@@ -51,13 +51,38 @@ struct seg {
         err = ((dx > dy) ? dx : -dy) / 2;
     }
 
-    void out(const char *op, std::vector<std::set<int> > pixels, int id) {
-        printf("%d %d %s ", xx, yy, op);
+    void out(const char *op, std::vector<std::set<int> > &pixels, int id) {
+        // printf("%d %d %s ", xx, yy, op);
         pixels[yy * 100 + xx].insert(id);
     }
 
-    void run(std::vector<std::set<int> > pixels, int id, bool check) {
+    void docheck(bool ch, std::vector<std::set<int> > &pixels, int id, int &ox, int &oy, int xx, int yy) {
+        if (!ch) {
+            return;
+        }
+
+        int oi = oy * 100 + ox;
+        int ni = yy * 100 + xx;
+
+        if (pixels[oi].size() > 1) {
+            printf("%d %d lineto ", ox, oy);
+        }
+        if (pixels[ni].size() > 1) {
+            printf("%d %d lineto ", xx, yy);
+        }
+
+        ox = xx;
+        oy = yy;
+    }
+
+    void run(std::vector<std::set<int> > &pixels, int id, bool check) {
         out("moveto", pixels, id);
+        int ox = xx, oy = yy;
+
+        if (check) {
+            printf("%d %d moveto ", xx, yy);
+        }
+
         while (xx != x1 || yy != y1) {
             int e2 = err;
             bool across = false, down = false;
@@ -76,22 +101,33 @@ struct seg {
                 if (dx > dy) {
                     yy += sy;
                     out("lineto", pixels, id);
+                    docheck(check, pixels, id, ox, oy, xx, yy);
                     xx += sx;
                     out("lineto", pixels, id);
+                    docheck(check, pixels, id, ox, oy, xx, yy);
                 } else {
                     xx += sx;
                     out("lineto", pixels, id);
+                    docheck(check, pixels, id, ox, oy, xx, yy);
                     yy += sy;
                     out("lineto", pixels, id);
+                    docheck(check, pixels, id, ox, oy, xx, yy);
                 }
             } else if (across) {
                 xx += sx;
                 out("lineto", pixels, id);
+                docheck(check, pixels, id, ox, oy, xx, yy);
             } else if (down) {
                 yy += sy;
                 out("lineto", pixels, id);
+                docheck(check, pixels, id, ox, oy, xx, yy);
             }
         }
+
+        if (check) {
+            printf("%d %d lineto ", xx, yy);
+        }
+
         printf("stroke\n");
     }
 };
@@ -103,6 +139,7 @@ int main() {
     pixels.resize(100 * 100);
 
     printf("0 setlinewidth\n");
+    printf("1 1 0 setrgbcolor\n");
 
     for (size_t i = 0; i < 50; i++) {
         int x0 = rand() % 100;
@@ -114,6 +151,8 @@ int main() {
         printf("%d %d moveto %d %d lineto stroke\n", segs[i].x0, segs[i].y0, segs[i].x1, segs[i].y1);
         segs[i].run(pixels, i, false);
     }
+
+    printf("0 setgray\n");
 
     for (size_t i = 0; i < 50; i++) {
         segs[i].restart();
