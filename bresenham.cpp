@@ -14,7 +14,7 @@ struct point {
 };
 
 #define GRID 500
-#define SEGS 50
+#define SEGS 300
 
 struct seg {
     int x0;
@@ -122,14 +122,18 @@ struct seg {
                 if (dx > dy) {
                     yy += sy;
                     out("lineto", pixels, id);
-                    docheck(check, pixels, id, ox, oy, xx, yy);
+                    if (1) {
+                        docheck(check, pixels, id, ox, oy, xx, yy);
+                    }
                     xx += sx;
                     out("lineto", pixels, id);
                     docheck(check, pixels, id, ox, oy, xx, yy);
                 } else {
                     xx += sx;
                     out("lineto", pixels, id);
-                    docheck(check, pixels, id, ox, oy, xx, yy);
+                    if (1) {
+                        docheck(check, pixels, id, ox, oy, xx, yy);
+                    }
                     yy += sy;
                     out("lineto", pixels, id);
                     docheck(check, pixels, id, ox, oy, xx, yy);
@@ -161,14 +165,28 @@ static bool get_line_intersection(point p0, point p1, point p2, point p3, point 
     double s2_x = p3.x - p2.x;
     double s2_y = p3.y - p2.y;
 
+    double denom = -s2_x * s1_y + s1_x * s2_y;
+    if (denom == 0) {
+        // collinear
+        return false;
+    }
+
     double s, t;
-    s = (-s1_y * (p0.x - p2.x) + s1_x * (p0.y - p2.y)) / (-s2_x * s1_y + s1_x * s2_y);
-    t = (s2_x * (p0.y - p2.y) - s2_y * (p0.x - p2.x)) / (-s2_x * s1_y + s1_x * s2_y);
+    s = (-s1_y * (p0.x - p2.x) + s1_x * (p0.y - p2.y)) / denom;
+    if (s <= 0 || s >= 1) {
+        return false;
+    }
+
+    t = (s2_x * (p0.y - p2.y) - s2_y * (p0.x - p2.x)) / denom;
+    if (t <= 0 || t >= 1) {
+        return false;
+    }
 
     if (s > 0 && s < 1 && t > 0 && t < 1) {
         out = point(p0.x + (t * s1_x), p0.y + (t * s1_y));
         return true;
     } else {
+        printf("got here with %f %f\n", s, t);
         return false;
     }
 }
