@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <time.h>
 #include <vector>
 #include <set>
@@ -191,7 +192,21 @@ static bool get_line_intersection(point p0, point p1, point p2, point p3, point 
     }
 }
 
-int main() {
+int main(int argc, char **argv) {
+    bool check = false;
+
+    {
+        int i;
+        extern int optind;
+        while ((i = getopt(argc, argv, "c")) != -1) {
+            switch (i) {
+                case 'c':
+                    check = true;
+                    break;
+            }
+        }
+    }
+
     srand(1);
     std::vector<seg> segs;
     std::vector<std::set<int> > pixels;
@@ -227,14 +242,16 @@ int main() {
         }
     }
 
-    for (size_t i = 0; i < cut.size(); i++) {
-        for (size_t j = i + 1; j < cut.size(); j++) {
-            point p(0, 0);
-            if (get_line_intersection(point(cut[i].x0, cut[i].y0), point(cut[i].x1, cut[i].y1),
-                                      point(cut[j].x0, cut[j].y0), point(cut[j].x1, cut[j].y1), p)) {
-                printf("%d,%d to %d,%d vs %d,%d %d,%d %lu and %lu at %d,%d\n",
-                    cut[i].x0, cut[i].y0, cut[i].x1, cut[i].y1,
-                    cut[j].x0, cut[j].y0, cut[j].x1, cut[j].y1, i, j, p.x, p.y);
+    if (check) {
+        for (size_t i = 0; i < cut.size(); i++) {
+            for (size_t j = i + 1; j < cut.size(); j++) {
+                point p(0, 0);
+                if (get_line_intersection(point(cut[i].x0, cut[i].y0), point(cut[i].x1, cut[i].y1),
+                                          point(cut[j].x0, cut[j].y0), point(cut[j].x1, cut[j].y1), p)) {
+                    printf("%d,%d to %d,%d vs %d,%d %d,%d %lu and %lu at %d,%d\n",
+                        cut[i].x0, cut[i].y0, cut[i].x1, cut[i].y1,
+                        cut[j].x0, cut[j].y0, cut[j].x1, cut[j].y1, i, j, p.x, p.y);
+                }
             }
         }
     }
