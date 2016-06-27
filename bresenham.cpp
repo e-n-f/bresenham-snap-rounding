@@ -13,6 +13,9 @@ struct point {
     }
 };
 
+#define GRID 500
+#define SEGS 50
+
 struct seg {
     int x0;
     int y0;
@@ -64,7 +67,7 @@ struct seg {
 
     void out(const char *op, std::vector<std::set<int> > &pixels, int id) {
         // printf("%d %d %s ", xx, yy, op);
-        pixels[yy * 100 + xx].insert(id);
+        pixels[yy * GRID + xx].insert(id);
     }
 
     void docheck(bool ch, std::vector<std::set<int> > &pixels, int id, int &ox, int &oy, int xx, int yy) {
@@ -72,8 +75,8 @@ struct seg {
             return;
         }
 
-        int oi = oy * 100 + ox;
-        int ni = yy * 100 + xx;
+        int oi = oy * GRID + ox;
+        int ni = yy * GRID + xx;
 
         if (pixels[oi] != pixels[ni]) {
             // Leaving a shared segment or changing how shared
@@ -174,16 +177,16 @@ int main() {
     srand(1);
     std::vector<seg> segs;
     std::vector<std::set<int> > pixels;
-    pixels.resize(100 * 100);
+    pixels.resize(GRID * GRID);
 
     printf("0 setlinewidth\n");
     printf("1 1 0 setrgbcolor\n");
 
-    for (size_t i = 0; i < 50; i++) {
-        int x0 = rand() % 100;
-        int y0 = rand() % 100;
-        int x1 = rand() % 100;
-        int y1 = rand() % 100;
+    for (size_t i = 0; i < SEGS; i++) {
+        int x0 = rand() % GRID;
+        int y0 = rand() % GRID;
+        int x1 = rand() % GRID;
+        int y1 = rand() % GRID;
 
         segs.push_back(seg(x0, y0, x1, y1));
         printf("%d %d moveto %d %d lineto stroke\n", segs[i].x0, segs[i].y0, segs[i].x1, segs[i].y1);
@@ -194,7 +197,7 @@ int main() {
 
     std::vector<seg> cut;
 
-    for (size_t i = 0; i < 50; i++) {
+    for (size_t i = 0; i < SEGS; i++) {
         segs[i].restart();
         segs[i].run(pixels, i, true);
 
@@ -204,8 +207,6 @@ int main() {
                 // printf("%d,%d %d,%d xxx\n", segs[i].points[j].x, segs[i].points[j].y, segs[i].points[j + 1].x, segs[i].points[j + 1].y);
             }
         }
-
-        cut.push_back(seg(-i, -i, -i, -i));
     }
 
     for (size_t i = 0; i < cut.size(); i++) {
