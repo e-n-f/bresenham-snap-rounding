@@ -4,6 +4,15 @@
 #include <vector>
 #include <set>
 
+struct point {
+    int x, y;
+
+    point(int _x, int _y) {
+        x = _x;
+        y = _y;
+    }
+};
+
 struct seg {
     int x0;
     int y0;
@@ -17,6 +26,8 @@ struct seg {
     int sy;
     int err;
     bool reversed;
+
+    std::vector<point> points;
 
     seg(int _x0, int _y0, int _x1, int _y1) {
         if (_y1 >= _y0) {
@@ -68,10 +79,12 @@ struct seg {
             // Leaving a shared segment or changing how shared
             if (pixels[oi].size() > 1) {
                 printf("%d %d lineto ", ox, oy);
+                points.push_back(point(ox, oy));
             }
             // Entering a shared segment or changing how shared
             if (pixels[ni].size() > 1) {
                 printf("%d %d lineto ", xx, yy);
+                points.push_back(point(xx, yy));
             }
         }
 
@@ -85,6 +98,7 @@ struct seg {
 
         if (check) {
             printf("%d %d moveto ", xx, yy);
+            points.push_back(point(xx, yy));
         }
 
         while (xx != x1 || yy != y1) {
@@ -130,11 +144,31 @@ struct seg {
 
         if (check) {
             printf("%d %d lineto ", xx, yy);
+            points.push_back(point(xx, yy));
         }
 
         printf("stroke\n");
     }
 };
+
+// http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+static bool get_line_intersection(point p0, point p1, point p2, point p3, point &out) {
+    double s1_x = p1.x - p0.x;
+    double s1_y = p1.y - p0.y;
+    double s2_x = p3.x - p2.x;
+    double s2_y = p3.y - p2.y;
+
+    double s, t;
+    s = (-s1_y * (p0.x - p2.x) + s1_x * (p0.y - p2.y)) / (-s2_x * s1_y + s1_x * s2_y);
+    t = (s2_x * (p0.y - p2.y) - s2_y * (p0.x - p2.x)) / (-s2_x * s1_y + s1_x * s2_y);
+
+    if (s > 0 && s < 1 && t > 0 && t < 1) {
+        out = point(p0.x + (t * s1_x), p0.y + (t * s1_y));
+        return true;
+    } else {
+        return false;
+    }
+}
 
 int main() {
     srand(1);
@@ -158,8 +192,31 @@ int main() {
 
     printf("0 setgray\n");
 
+    std::vector<seg> cut;
+
     for (size_t i = 0; i < 50; i++) {
         segs[i].restart();
         segs[i].run(pixels, i, true);
+
+        for (size_t j = 0; j + 1 < segs[i].points.size(); j++) {
+            if (segs[i].points[j].x != segs[i].points[j + 1].x || segs[i].points[j].y != segs[i].points[j + 1].y) {
+                cut.push_back(seg(segs[i].points[j].x, segs[i].points[j].y, segs[i].points[j + 1].x, segs[i].points[j + 1].y));
+                // printf("%d,%d %d,%d xxx\n", segs[i].points[j].x, segs[i].points[j].y, segs[i].points[j + 1].x, segs[i].points[j + 1].y);
+            }
+        }
+
+        cut.push_back(seg(-i, -i, -i, -i));
+    }
+
+    for (size_t i = 0; i < cut.size(); i++) {
+        for (size_t j = i + 1; j < cut.size(); j++) {
+            point p(0, 0);
+            if (get_line_intersection(point(cut[i].x0, cut[i].y0), point(cut[i].x1, cut[i].y1),
+                                      point(cut[j].x0, cut[j].y0), point(cut[j].x1, cut[j].y1), p)) {
+                printf("%d,%d to %d,%d vs %d,%d %d,%d %lu and %lu at %d,%d\n",
+                    cut[i].x0, cut[i].y0, cut[i].x1, cut[i].y1,
+                    cut[j].x0, cut[j].y0, cut[j].x1, cut[j].y1, i, j, p.x, p.y);
+            }
+        }
     }
 }
