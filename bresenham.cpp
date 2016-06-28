@@ -71,6 +71,14 @@ struct seg {
         pixels[yy * GRID + xx].insert(id);
     }
 
+    void dump(std::set<int> &s) {
+        std::set<int>::iterator i;
+        for (i = s.begin(); i != s.end(); ++i) {
+            printf("%d,", *i);
+        }
+        printf(" ");
+    }
+
     void docheck(bool ch, std::vector<std::set<int> > &pixels, int id, int &ox, int &oy, int xx, int yy) {
         if (!ch) {
             return;
@@ -80,6 +88,13 @@ struct seg {
         int ni = yy * GRID + xx;
 
         if (pixels[oi] != pixels[ni]) {
+#if 0
+            printf("not the same: ");
+            dump(pixels[oi]);
+            dump(pixels[ni]);
+            printf("\n");
+#endif
+
             // Leaving a shared segment or changing how shared
             if (pixels[oi].size() > 1) {
                 printf("%d %d lineto ", ox, oy);
@@ -90,6 +105,13 @@ struct seg {
                 printf("%d %d lineto ", xx, yy);
                 points.push_back(point(xx, yy));
             }
+        } else {
+#if 0
+            printf("the same: ");
+            dump(pixels[oi]);
+            dump(pixels[oi]);
+            printf("\n");
+#endif
         }
 
         ox = xx;
@@ -120,25 +142,16 @@ struct seg {
             }
 
             if (across && down) {
-                if (dx > dy) {
-                    yy += sy;
-                    out("lineto", pixels, id);
-                    if (1) {
-                        docheck(check, pixels, id, ox, oy, xx, yy);
-                    }
-                    xx += sx;
-                    out("lineto", pixels, id);
-                    docheck(check, pixels, id, ox, oy, xx, yy);
-                } else {
-                    xx += sx;
-                    out("lineto", pixels, id);
-                    if (1) {
-                        docheck(check, pixels, id, ox, oy, xx, yy);
-                    }
-                    yy += sy;
+                xx += sx;
+
+                if (sx < 0) {
                     out("lineto", pixels, id);
                     docheck(check, pixels, id, ox, oy, xx, yy);
                 }
+
+                yy += sy;
+                out("lineto", pixels, id);
+                docheck(check, pixels, id, ox, oy, xx, yy);
             } else if (across) {
                 xx += sx;
                 out("lineto", pixels, id);
